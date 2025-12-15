@@ -7,8 +7,17 @@ security features.
 """
 
 __version__ = "1.0.0"
-__all__ = ["DatabaseMonitor", "HealthCheckResult"]
+__all__ = [
+    "HealthCheckResult",
+    "DatabaseChecker",
+    "Application",
+    "load_config",
+    "setup_logging",
+]
 
 from db_up.models import HealthCheckResult
-from db_up.monitor import DatabaseMonitor
+from db_up.db_checker import DatabaseChecker
+from db_up.main import Application
+from db_up.config import load_config
+from db_up.logger import setup_logging
 
