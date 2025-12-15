@@ -1,0 +1,49 @@
+# Database Connection Configuration
+# SECURITY: Never put passwords in this file! Use environment variables.
+# Required environment variables: DB_PASSWORD or DATABASE_URL
+
+database:
+  # Alternative 1: Individual connection parameters
+  host: localhost              # default: localhost, env: DB_HOST
+  port: 5432                   # default: 5432, env: DB_PORT
+  name: mydb                   # REQUIRED, env: DB_NAME
+  user: postgres               # default: postgres, env: DB_USER
+  # password: NEVER PUT HERE   # MUST use env: DB_PASSWORD
+  
+  # Alternative 2: Connection URI (overrides individual params)
+  # connection_uri: ${DATABASE_URL}  # Full connection string
+  
+  # SSL Configuration (SECURITY: require by default)
+  ssl_mode: require            # default: require
+                               # options: disable (NOT RECOMMENDED), allow, prefer, require, verify-ca, verify-full
+  
+  # Connection behavior
+  connect_timeout: 5           # seconds, default: 5
+  statement_timeout: 5         # seconds, default: 5
+  application_name: db-up      # Shows in pg_stat_activity
+
+# Monitoring Configuration
+monitor:
+  check_interval: 60           # seconds, default: 60, min: 5, max: 3600
+  max_retries: 3               # default: 3, set to 0 to disable retries
+  retry_backoff: exponential   # options: fixed, linear, exponential
+  retry_delay: 5               # base delay in seconds, default: 5
+  retry_jitter: true           # add randomness to prevent thundering herd
+  
+  # Health check query (advanced users only)
+  health_check_query: "SELECT 1 AS health_check"  # default query
+  read_only_mode: true         # Run checks in read-only transaction (SECURITY)
+
+# Logging Configuration  
+logging:
+  level: INFO                  # default: INFO, options: DEBUG, INFO, WARNING, ERROR
+  output: console              # default: console, options: console, file, both
+  file_path: logs/db-up.log    # default: logs/db-up.log
+  max_file_size: 10485760      # bytes, default: 10MB
+  backup_count: 5              # number of rotated logs to keep
+  format: text                 # options: json, text (json for production)
+  
+  # Security: Redact sensitive data in logs
+  redact_credentials: true     # default: true (NEVER set to false in production)
+  redact_hostnames: false      # set true to hide internal infrastructure
+
