@@ -1,0 +1,41 @@
+# Docker Compose for local development and testing
+version: '3.8'
+
+services:
+  # PostgreSQL database for testing
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secret
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # db-up monitor
+  db-monitor:
+    build: .
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: testdb
+      DB_USER: postgres
+      DB_PASSWORD: secret
+      DB_CHECK_INTERVAL: 30
+      DB_LOG_LEVEL: INFO
+      DB_LOG_FORMAT: text
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
