@@ -16,6 +16,9 @@ database:
   # SSL Configuration (SECURITY: require by default)
   ssl_mode: require            # default: require
                                # options: disable (NOT RECOMMENDED), allow, prefer, require, verify-ca, verify-full
+  ssl_verify: true             # default: true, env: SSL_VERIFY
+                               # Set to false to skip certificate verification (dev/testing only)
+                               # WARNING: Only use ssl_verify: false with self-signed certs in dev
   
   # Connection behavior
   connect_timeout: 5           # seconds, default: 5

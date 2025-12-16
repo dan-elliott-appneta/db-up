@@ -82,16 +82,31 @@ class DatabaseChecker:
         
         try:
             # Establish connection with security settings
-            conn = psycopg2.connect(
-                host=self.config.host,
-                port=self.config.port,
-                database=self.config.database,
-                user=self.config.user,
-                password=self.config.password,
-                connect_timeout=self.config.connect_timeout,
-                sslmode=self.config.ssl_mode,
-                application_name=self.config.application_name,
-            )
+            # Build connection parameters
+            conn_params = {
+                'host': self.config.host,
+                'port': self.config.port,
+                'database': self.config.database,
+                'user': self.config.user,
+                'password': self.config.password,
+                'connect_timeout': self.config.connect_timeout,
+                'sslmode': self.config.ssl_mode,
+                'application_name': self.config.application_name,
+            }
+            
+            # Add SSL verification parameter if disabled
+            if not self.config.ssl_verify:
+                # When SSL_VERIFY is false, we need to disable certificate verification
+                # This is done by not verifying the server certificate
+                import ssl
+                conn_params['sslmode'] = 'require'  # Still require SSL, just don't verify
+                # Note: psycopg2 doesn't have a direct parameter for this,
+                # but we can set sslmode to 'require' which requires SSL but doesn't verify cert
+                if self.config.ssl_mode in ['verify-ca', 'verify-full']:
+                    # Override to 'require' to skip verification
+                    conn_params['sslmode'] = 'require'
+            
+            conn = psycopg2.connect(**conn_params)
             
             cursor = conn.cursor()
             

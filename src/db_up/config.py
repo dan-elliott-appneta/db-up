@@ -128,6 +128,7 @@ def _load_database_config(file_config: Dict[str, Any]) -> DatabaseConfig:
     port = int(os.getenv('DB_PORT', file_config.get('port', 5432)))
     user = os.getenv('DB_USER') or file_config.get('user', 'postgres')
     ssl_mode = os.getenv('DB_SSL_MODE') or file_config.get('ssl_mode', 'require')
+    ssl_verify = _parse_bool(os.getenv('SSL_VERIFY'), file_config.get('ssl_verify', True))
     connect_timeout = int(os.getenv('DB_CONNECT_TIMEOUT', file_config.get('connect_timeout', 5)))
     statement_timeout = int(os.getenv('DB_STATEMENT_TIMEOUT', file_config.get('statement_timeout', 5)))
     application_name = file_config.get('application_name', 'db-up')
@@ -139,6 +140,7 @@ def _load_database_config(file_config: Dict[str, Any]) -> DatabaseConfig:
         port=port,
         user=user,
         ssl_mode=ssl_mode,
+        ssl_verify=ssl_verify,
         connect_timeout=connect_timeout,
         statement_timeout=statement_timeout,
         application_name=application_name,
@@ -174,6 +176,7 @@ def _parse_database_url(database_url: str) -> DatabaseConfig:
         port=parsed.port or 5432,
         user=parsed.username or 'postgres',
         ssl_mode=os.getenv('DB_SSL_MODE', 'require'),
+        ssl_verify=_parse_bool(os.getenv('SSL_VERIFY'), True),
     )
 
 

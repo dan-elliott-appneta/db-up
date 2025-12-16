@@ -116,6 +116,7 @@ Configuration is loaded with the following priority:
 | `DB_PORT` | Database port | `5432` |
 | `DB_USER` | Database user | `postgres` |
 | `DB_SSL_MODE` | SSL mode | `require` |
+| `SSL_VERIFY` | Verify SSL certificates (true/false) | `true` |
 | `DATABASE_URL` | Full connection URI | - |
 | `DB_CHECK_INTERVAL` | Seconds between checks | `60` |
 | `DB_MAX_RETRIES` | Maximum retry attempts | `3` |

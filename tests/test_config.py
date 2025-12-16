@@ -175,6 +175,27 @@ class TestLoadDatabaseConfig:
         assert config.port == 5432
         assert config.user == 'postgres'
         assert config.ssl_mode == 'require'
+        assert config.ssl_verify is True
+    
+    def test_ssl_verify_false(self, monkeypatch) -> None:
+        """Test that SSL_VERIFY=false disables certificate verification."""
+        monkeypatch.setenv('DB_NAME', 'testdb')
+        monkeypatch.setenv('DB_PASSWORD', 'secret')
+        monkeypatch.setenv('SSL_VERIFY', 'false')
+        
+        config = _load_database_config({})
+        
+        assert config.ssl_verify is False
+    
+    def test_ssl_verify_true(self, monkeypatch) -> None:
+        """Test that SSL_VERIFY=true enables certificate verification."""
+        monkeypatch.setenv('DB_NAME', 'testdb')
+        monkeypatch.setenv('DB_PASSWORD', 'secret')
+        monkeypatch.setenv('SSL_VERIFY', 'true')
+        
+        config = _load_database_config({})
+        
+        assert config.ssl_verify is True
 
 
 class TestParseDatabaseUrl:

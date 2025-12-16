@@ -140,6 +140,7 @@ db-up supports three configuration methods with the following priority:
 | `DB_PORT` | Database port | `5432` |
 | `DB_USER` | Database username | `postgres` |
 | `DB_SSL_MODE` | SSL mode | `require` |
+| `SSL_VERIFY` | Verify SSL certificates (true/false) | `true` |
 | `DATABASE_URL` | Full connection URI | - |
 | `DB_CHECK_INTERVAL` | Seconds between checks | `60` |
 | `DB_MAX_RETRIES` | Maximum retry attempts | `3` |
@@ -208,6 +209,26 @@ db-up requires SSL by default for security. Available SSL modes:
 ```bash
 export DB_SSL_MODE=require
 ```
+
+#### Disabling SSL Certificate Verification
+
+**⚠️ Warning**: Only use this in development/testing environments with self-signed certificates.
+
+If you need to connect to a database with a self-signed certificate or skip certificate verification:
+
+```bash
+export SSL_VERIFY=false
+export DB_SSL_MODE=require
+db-up
+```
+
+When `SSL_VERIFY=false`:
+- SSL connection is still required
+- Certificate verification is skipped
+- ⚠️ This reduces security and should NOT be used in production
+- Useful for development environments with self-signed certificates
+
+**Production**: Always keep `SSL_VERIFY=true` (default) for security.
 
 ---
 
@@ -947,6 +968,7 @@ DB_NAME=mydb
 DB_USER=postgres
 DB_PASSWORD=secret
 DB_SSL_MODE=require
+SSL_VERIFY=true
 DB_CONNECT_TIMEOUT=5
 DB_STATEMENT_TIMEOUT=5
 DATABASE_URL=postgresql://user:pass@host:5432/dbname

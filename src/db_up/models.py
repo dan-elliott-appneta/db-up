@@ -59,6 +59,7 @@ class DatabaseConfig:
         port: Database port (default: 5432)
         user: Database user (default: postgres)
         ssl_mode: SSL mode (default: require)
+        ssl_verify: Whether to verify SSL certificates (default: True)
         connect_timeout: Connection timeout in seconds (default: 5)
         statement_timeout: Statement timeout in seconds (default: 5)
         application_name: Application name for pg_stat_activity (default: db-up)
@@ -70,6 +71,7 @@ class DatabaseConfig:
     port: int = 5432
     user: str = "postgres"
     ssl_mode: str = "require"
+    ssl_verify: bool = True
     connect_timeout: int = 5
     statement_timeout: int = 5
     application_name: str = "db-up"
