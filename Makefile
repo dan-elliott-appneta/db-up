@@ -10,8 +10,13 @@ install:  ## Install the package
 	pip install -e .
 
 install-dev:  ## Install development dependencies
-	pip install -e .
-	pip install -r requirements-dev.txt
+	pip install -e ".[dev]"
+
+install-venv:  ## Install in a virtual environment
+	./install.sh --venv .venv
+
+install-venv-dev:  ## Install in a virtual environment with dev dependencies
+	./install.sh --venv .venv --dev
 
 test:  ## Run tests
 	pytest -v

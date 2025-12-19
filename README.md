@@ -18,8 +18,20 @@ A simple, secure tool to monitor PostgreSQL database connectivity with configura
 
 ### Installation
 
+**Quick install with script:**
+```bash
+./install.sh --venv .venv
+source .venv/bin/activate
+```
+
+**Or with pip:**
 ```bash
 pip install -e .
+```
+
+**With development dependencies:**
+```bash
+pip install -e ".[dev]"
 ```
 
 ### Simplest Usage
@@ -236,11 +248,14 @@ pytest tests/test_main.py::TestIntegration -v
 ### Setup Development Environment
 
 ```bash
-# Install package in development mode
-pip install -e .
+# Option 1: Use install script (recommended)
+./install.sh --venv .venv --dev
+source .venv/bin/activate
 
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Option 2: Manual setup
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
 
 # Run tests
 pytest
