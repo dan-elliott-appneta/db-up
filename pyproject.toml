@@ -7,7 +7,7 @@ name = "db-up"
 version = "1.0.0"
 description = "A simple tool to monitor PostgreSQL database connectivity"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 license = {text = "MIT"}
 authors = [
     {name = "DB-Up Contributors"}
@@ -20,11 +20,11 @@ classifiers = [
     "Topic :: System :: Monitoring",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
     "psycopg2-binary>=2.9.0",
@@ -52,7 +52,7 @@ where = ["src"]
 
 [tool.black]
 line-length = 88
-target-version = ['py38', 'py39', 'py310', 'py311', 'py312']
+target-version = ['py39', 'py310', 'py311', 'py312']
 include = '\.pyi?$'
 
 [tool.pytest.ini_options]
@@ -63,13 +63,18 @@ python_functions = ["test_*"]
 addopts = "-v --cov=src --cov-report=term-missing --cov-report=html"
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
+ignore_missing_imports = true
+# Strict type checking enabled
 disallow_untyped_defs = true
 disallow_incomplete_defs = true
 check_untyped_defs = true
 no_implicit_optional = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_ignores = true
 
 [tool.coverage.run]
 source = ["src"]

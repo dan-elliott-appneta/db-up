@@ -1,0 +1,66 @@
+# db-up Development Guidelines
+
+## Before Pushing to a PR
+
+Always run type checking, linting, and tests locally before pushing changes:
+
+```bash
+# Activate virtual environment
+source .venv/bin/activate
+
+# Run linting (uses .flake8 config)
+flake8 src tests
+
+# Run type checking (uses pyproject.toml config)
+mypy src
+
+# Run tests
+pytest -v
+```
+
+All checks must pass before pushing. The CI will run the same checks and block merging if they fail.
+
+## Quick Check Command
+
+Run all checks at once:
+
+```bash
+flake8 src tests && mypy src && pytest -v
+```
+
+## Code Quality Standards
+
+- **Linting**: Full flake8 checks (max-line-length=88, complexity=10)
+- **Type Checking**: Strict mypy settings enabled (disallow_untyped_defs, etc.)
+- **Formatting**: Black with 88-char line length
+- **Tests**: 173 tests with 97% coverage
+
+## Project Structure
+
+- `src/db_up/` - Main source code
+- `tests/` - Test suite (173 tests, 97% coverage)
+- `.github/workflows/` - CI/CD workflows
+- `.flake8` - Flake8 configuration
+- `pyproject.toml` - Project config including mypy settings
+
+## Installation for Development
+
+```bash
+./install.sh --venv .venv --dev
+source .venv/bin/activate
+
+# Optional: Install pre-commit hooks
+pip install pre-commit
+pre-commit install
+```
+
+## Pre-commit Hooks
+
+This project uses pre-commit hooks to enforce code quality. After installing:
+- Hooks run automatically on `git commit`
+- Tests run on `git push`
+- Run manually: `pre-commit run --all-files`
+
+## Python Version
+
+This project requires Python 3.9 or higher (tested up to 3.13).
