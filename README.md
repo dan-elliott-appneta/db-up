@@ -2,12 +2,12 @@
 
 A simple, secure tool to monitor PostgreSQL database connectivity with configurable intervals, comprehensive logging, and robust error handling.
 
-[![CI](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml/badge.svg)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Tests](https://img.shields.io/badge/tests-173%20passed-success)]() [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.9%2B-blue)]()
+[![CI](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml/badge.svg)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Tests](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dan-elliott-appneta/BADGE_GIST_ID/raw/db-up-tests.json)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dan-elliott-appneta/BADGE_GIST_ID/raw/db-up-coverage.json)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Python](https://img.shields.io/badge/python-3.9%2B-blue)]()
 
 ## Features
 
 - 🔒 **Security First**: Passwords only from environment variables, automatic credential redaction, SSL/TLS by default
-- 🧪 **Fully Tested**: 173 tests with 97% code coverage
+- 🧪 **Fully Tested**: 200+ tests with 97% code coverage (badges update automatically)
 - 👤 **Easy to Use**: Zero-config quick start, works with just `DB_PASSWORD` and `DB_NAME`
 - 📊 **Configurable Logging**: DEBUG/INFO/WARNING/ERROR levels, text or JSON format, console or file output
 - 📈 **Prometheus Metrics**: Export metrics for monitoring with Prometheus/Grafana
@@ -226,17 +226,17 @@ pytest -v --cov=src --cov-report=term-missing
 
 ### Test Statistics
 
-- **Total Tests**: 206
-- **Coverage**: 97%
+- **Total Tests**: 200+ (see badge for current count)
+- **Coverage**: 97%+ (see badge for current percentage)
 - **Test Categories**:
-  - Models: 24 tests
-  - Security: 41 tests
-  - Configuration: 26 tests
-  - Logging: 21 tests
-  - Retry Logic: 22 tests
-  - Database Checker: 20 tests
-  - Main Application: 24 tests
-  - Metrics: 26 tests
+  - Models: Data structure validation
+  - Security: Credential handling, redaction, input validation
+  - Configuration: Config loading, environment variables, defaults
+  - Logging: Log formatting, output modes, redaction
+  - Retry Logic: Backoff, jitter, retry limits
+  - Database Checker: Connection handling, health checks
+  - Main Application: CLI, integration tests
+  - Metrics: Prometheus metric recording
 
 ### Run Specific Test Categories
 
@@ -275,6 +275,9 @@ mypy src
 
 ```
 db-up/
+├── .github/workflows/  # CI/CD workflows
+│   ├── python-package.yml  # CI: tests, build, badges
+│   └── pr-checks.yml       # PR: lint, typecheck, test
 ├── src/db_up/          # Source code
 │   ├── models.py       # Data models
 │   ├── config.py       # Configuration loading
@@ -284,7 +287,7 @@ db-up/
 │   ├── retry.py        # Retry logic
 │   ├── db_checker.py   # Database checker
 │   └── main.py         # Main application
-├── tests/              # Test suite (206 tests)
+├── tests/              # Test suite (200+ tests)
 ├── config/             # Example configurations
 ├── docker/             # Docker test environment
 │   ├── prometheus/     # Prometheus configuration
@@ -514,6 +517,40 @@ histogram_quantile(0.95, rate(db_up_check_duration_seconds_bucket[5m]))
 - [x] Prometheus metrics export
 - [ ] Historical uptime tracking
 - [ ] Support for other databases (MySQL, MongoDB)
+
+## CI/CD
+
+### GitHub Actions Workflows
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| **CI** | Push to main | Run tests, build package, update badges |
+| **PR Checks** | Pull requests | Lint, type check, test across Python versions |
+
+### Dynamic Badges Setup
+
+The test count and coverage badges update automatically on each push to main. To enable this:
+
+1. **Create a Gist**: Create a new secret gist (can be empty initially)
+
+2. **Create a Personal Access Token**:
+   - Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)
+   - Create a token with `gist` scope
+   - Copy the token
+
+3. **Configure Repository**:
+   - Add secret `GIST_TOKEN` with your personal access token
+   - Add variable `BADGE_GIST_ID` with your gist ID (from the gist URL)
+
+4. **Update README**: Replace `BADGE_GIST_ID` in the badge URLs with your actual gist ID
+
+### PR Checks
+
+All pull requests must pass:
+- **Linting** (flake8)
+- **Type checking** (mypy)
+- **Tests** across Python 3.9, 3.10, 3.11, 3.12, and 3.13
+- **Coverage** minimum 95%
 
 ## Contributing
 
