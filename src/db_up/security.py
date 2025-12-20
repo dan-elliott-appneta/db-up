@@ -10,7 +10,7 @@ SECURITY: All functions in this module must be thoroughly tested.
 """
 
 import re
-from typing import Optional
+from typing import Any, Optional
 
 
 def sanitize_error(error: str, redact_hostnames: bool = False) -> str:
@@ -164,7 +164,7 @@ def redact_config_for_logging(config_dict: dict) -> dict:
         'database_url',
     ]
     
-    def redact_recursive(obj: any) -> None:
+    def redact_recursive(obj: Any) -> None:
         """Recursively redact sensitive fields."""
         if isinstance(obj, dict):
             for key in list(obj.keys()):

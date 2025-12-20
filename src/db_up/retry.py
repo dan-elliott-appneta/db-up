@@ -10,7 +10,7 @@ This module provides retry functionality with configurable backoff strategies:
 
 import time
 import random
-from typing import Callable, TypeVar, Optional
+from typing import Any, Callable, TypeVar, Optional
 from db_up.models import MonitorConfig
 
 T = TypeVar('T')
@@ -65,7 +65,7 @@ def calculate_backoff(
 def retry_with_backoff(
     func: Callable[[], T],
     config: MonitorConfig,
-    logger: Optional[any] = None
+    logger: Optional[Any] = None
 ) -> T:
     """
     Execute a function with retry logic and backoff.
@@ -172,7 +172,7 @@ class RetryContext:
         ...             retry.failure(e)
     """
     
-    def __init__(self, config: MonitorConfig, logger: Optional[any] = None):
+    def __init__(self, config: MonitorConfig, logger: Optional[Any] = None):
         """
         Initialize retry context.
         

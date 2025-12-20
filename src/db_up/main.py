@@ -8,7 +8,7 @@ import sys
 import signal
 import time
 import argparse
-from typing import Optional
+from typing import Any, Optional
 
 from db_up.config import load_config
 from db_up.logger import setup_logging, get_logger
@@ -47,7 +47,7 @@ class Application:
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
     
-    def _signal_handler(self, signum: int, frame: any) -> None:
+    def _signal_handler(self, signum: int, frame: Any) -> None:
         """
         Handle shutdown signals.
         
