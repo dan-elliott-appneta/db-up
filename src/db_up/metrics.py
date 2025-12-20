@@ -6,7 +6,6 @@ status and performance.
 """
 
 import logging
-from typing import Optional
 
 from db_up.models import HealthCheckResult
 
@@ -110,9 +109,8 @@ class MetricsCollector:
         try:
             self._start_http_server(self.port, addr=self.metrics_host)
             self._server_started = True
-            logger.info(
-                f"Metrics server started on http://{self.metrics_host}:{self.port}/metrics"
-            )
+            url = f"http://{self.metrics_host}:{self.port}/metrics"
+            logger.info(f"Metrics server started on {url}")
         except OSError as e:
             if "Address already in use" in str(e):
                 raise OSError(

@@ -347,27 +347,49 @@ class TestMetricsCollectorWithPrometheus:
 class TestMetricsCollectorWithoutPrometheus:
     """Tests for MetricsCollector when prometheus-client is not available."""
 
-    def test_initialization_without_prometheus(
-        self, caplog: pytest.LogCaptureFixture
-    ) -> None:
-        """Test MetricsCollector when prometheus-client is not installed."""
-        with patch.dict("sys.modules", {"prometheus_client": None}):
-            # Force ImportError
-            with patch(
-                "db_up.metrics.MetricsCollector.__init__",
-                side_effect=lambda self, *args, **kwargs: self._init_without_prometheus(
-                    *args, **kwargs
-                ),
-            ):
-                collector = MetricsCollector(
-                    database="testdb", host="localhost", port=9090
+    @pytest.fixture
+    def mock_prometheus(self) -> Mock:
+        """Mock prometheus_client module for creating collector."""
+        mock_counter = MagicMock()
+        mock_gauge = MagicMock()
+        mock_histogram = MagicMock()
+        mock_start_http_server = MagicMock()
+
+        with patch.dict(
+            "sys.modules",
+            {
+                "prometheus_client": MagicMock(
+                    Counter=mock_counter,
+                    Gauge=mock_gauge,
+                    Histogram=mock_histogram,
+                    start_http_server=mock_start_http_server,
                 )
-                collector._prometheus_available = False
+            },
+        ):
+            yield {
+                "Counter": mock_counter,
+                "Gauge": mock_gauge,
+                "Histogram": mock_histogram,
+                "start_http_server": mock_start_http_server,
+            }
 
-                assert collector._prometheus_available is False
-                # Warning should be logged
+    def test_initialization_without_prometheus(
+        self, mock_prometheus: Mock
+    ) -> None:
+        """Test MetricsCollector behavior when prometheus is disabled."""
+        collector = MetricsCollector(
+            database="testdb", host="localhost", port=9090
+        )
+        # Simulate prometheus not available
+        collector._prometheus_available = False
 
-    def test_start_server_without_prometheus(self) -> None:
+        assert collector._prometheus_available is False
+        assert collector.database == "testdb"
+        assert collector.host == "localhost"
+
+    def test_start_server_without_prometheus(
+        self, mock_prometheus: Mock
+    ) -> None:
         """Test starting server when prometheus-client is not available."""
         collector = MetricsCollector(
             database="testdb", host="localhost", port=9090
@@ -379,7 +401,9 @@ class TestMetricsCollectorWithoutPrometheus:
         ):
             collector.start_server()
 
-    def test_record_check_without_prometheus(self) -> None:
+    def test_record_check_without_prometheus(
+        self, mock_prometheus: Mock
+    ) -> None:
         """Test recording check when prometheus-client is not available."""
         collector = MetricsCollector(
             database="testdb", host="localhost", port=9090
