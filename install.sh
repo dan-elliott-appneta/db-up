@@ -275,5 +275,5 @@ fi
 echo "     db-up"
 echo ""
 echo "For more options, run: db-up --help"
-echo "Documentation: https://github.com/yourusername/db-up"
+echo "Documentation: https://github.com/dan-elliott-appneta/db-up"
 echo ""

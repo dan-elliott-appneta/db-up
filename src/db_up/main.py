@@ -164,7 +164,7 @@ Examples:
   # Custom interval
   db-up --interval 30
 
-For more information, visit: https://github.com/yourusername/db-up
+For more information, visit: https://github.com/dan-elliott-appneta/db-up
         """
     )
     
