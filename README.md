@@ -226,7 +226,7 @@ pytest -v --cov=src --cov-report=term-missing
 
 ### Test Statistics
 
-- **Total Tests**: 171
+- **Total Tests**: 206
 - **Coverage**: 97%
 - **Test Categories**:
   - Models: 24 tests
@@ -235,7 +235,8 @@ pytest -v --cov=src --cov-report=term-missing
   - Logging: 21 tests
   - Retry Logic: 22 tests
   - Database Checker: 20 tests
-  - Main Application: 17 tests
+  - Main Application: 24 tests
+  - Metrics: 26 tests
 
 ### Run Specific Test Categories
 
@@ -279,13 +280,105 @@ db-up/
 │   ├── config.py       # Configuration loading
 │   ├── security.py     # Security functions
 │   ├── logger.py       # Logging setup
+│   ├── metrics.py      # Prometheus metrics
 │   ├── retry.py        # Retry logic
 │   ├── db_checker.py   # Database checker
 │   └── main.py         # Main application
-├── tests/              # Test suite (171 tests)
+├── tests/              # Test suite (206 tests)
 ├── config/             # Example configurations
+├── docker/             # Docker test environment
+│   ├── prometheus/     # Prometheus configuration
+│   └── grafana/        # Grafana dashboards & provisioning
 └── docs/               # Additional documentation
+```
 
+## Docker Test Environment
+
+A complete monitoring stack is included for testing and development. It includes PostgreSQL, db-up with metrics enabled, Prometheus, and Grafana with a pre-configured dashboard.
+
+### Security Note
+
+> **For Development/Testing Only**: This stack uses default credentials and runs services as root. DO NOT use this configuration in production without proper security hardening.
+
+### Quick Start
+
+```bash
+# Start the full monitoring stack
+sudo docker compose up --build
+
+# Or run in detached mode
+sudo docker compose up --build -d
+
+# View logs
+sudo docker compose logs -f
+
+# Stop and remove containers
+sudo docker compose down
+
+# Stop and remove containers AND volumes (clean slate)
+sudo docker compose down -v
+```
+
+### Services
+
+| Service | Description | Port | URL |
+|---------|-------------|------|-----|
+| PostgreSQL | Database to monitor | 5432 | `localhost:5432` |
+| db-up | Database monitor with metrics | 9090 | http://localhost:9090/metrics |
+| Prometheus | Metrics collection | 9091 | http://localhost:9091 |
+| Grafana | Visualization dashboard | 3000 | http://localhost:3000 |
+
+### Accessing Grafana
+
+1. Open http://localhost:3000
+2. Login with `admin` / `admin`
+3. The **db-up Database Monitor** dashboard is automatically loaded
+
+### Dashboard Panels
+
+The pre-configured Grafana dashboard includes:
+
+- **Database Status** - Real-time UP/DOWN indicator
+- **Response Time** - Average and p95 latency graphs
+- **Success Rate** - Percentage of successful health checks
+- **Health Checks per Minute** - Stacked success/failure bar chart
+- **Total Checks** - Running counter of all checks
+- **Total Errors** - Error counter (red when > 0)
+- **Connection Status Timeline** - Historical connection status
+- **Response Time Distribution** - Histogram of response times
+
+### Customizing the Test Environment
+
+**Change check interval:**
+```yaml
+# In docker-compose.yml
+environment:
+  DB_CHECK_INTERVAL: 5  # Check every 5 seconds
+```
+
+**Enable debug logging:**
+```yaml
+environment:
+  DB_LOG_LEVEL: DEBUG
+```
+
+**Add custom Prometheus alerts:**
+Edit `docker/prometheus/prometheus.yml` to add alerting rules.
+
+### Files
+
+```
+docker/
+├── prometheus/
+│   └── prometheus.yml           # Prometheus scrape configuration
+└── grafana/
+    ├── dashboards/
+    │   └── db-up-dashboard.json # Pre-configured dashboard
+    └── provisioning/
+        ├── dashboards/
+        │   └── dashboards.yml   # Dashboard auto-loading config
+        └── datasources/
+            └── prometheus.yml   # Prometheus datasource config
 ```
 
 ## Architecture

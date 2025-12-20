@@ -1,0 +1,27 @@
+# Prometheus configuration for db-up monitoring
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# Alerting configuration (optional - alerts can be added later)
+alerting:
+  alertmanagers: []
+
+# Rule files (optional - can add alert rules later)
+rule_files: []
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # db-up metrics
+  - job_name: 'db-up'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['db-monitor:9090']
+        labels:
+          environment: 'docker'
+          service: 'db-up'
