@@ -10,7 +10,7 @@ This module provides retry functionality with configurable backoff strategies:
 
 import time
 import random
-from typing import Any, Callable, TypeVar, Optional
+from typing import Any, Callable, Literal, Optional, TypeVar
 from db_up.models import MonitorConfig
 
 T = TypeVar('T')
@@ -190,7 +190,7 @@ class RetryContext:
         """Enter the context."""
         return self
     
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> Literal[False]:
         """
         Exit the context.
         

@@ -16,7 +16,7 @@ import json
 import os
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from db_up.models import LoggingConfig
 from db_up.security import sanitize_error
@@ -56,7 +56,7 @@ class SensitiveDataFilter(logging.Filter):
         
         # Sanitize any string arguments
         if hasattr(record, 'args') and record.args:
-            sanitized_args = []
+            sanitized_args: List[Any] = []
             for arg in record.args:
                 if isinstance(arg, str):
                     sanitized_args.append(sanitize_error(arg, self.redact_hostnames))
@@ -197,6 +197,7 @@ def setup_logging(config: LoggingConfig) -> logging.Logger:
         logger.addFilter(SensitiveDataFilter(config.redact_hostnames))
     
     # Choose formatter based on format setting
+    formatter: logging.Formatter
     if config.format == 'json':
         formatter = JSONFormatter(
             datefmt='%Y-%m-%dT%H:%M:%S'
