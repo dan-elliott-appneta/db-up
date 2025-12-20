@@ -1,13 +1,14 @@
 """Tests for main application module."""
 
 import signal
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, MagicMock, patch
 from db_up.main import Application, parse_args, main
 from db_up.models import (
     Config,
     DatabaseConfig,
     MonitorConfig,
     LoggingConfig,
+    MetricsConfig,
     HealthCheckResult,
 )
 from datetime import datetime
@@ -360,3 +361,191 @@ class TestIntegration:
         # Verify all checks were performed
         assert app.check_count == 3
         assert mock_checker.check_connection.call_count == 3
+
+
+class TestMetricsInitialization:
+    """Tests for metrics initialization in Application."""
+
+    @patch("db_up.main.MetricsCollector")
+    @patch("db_up.main.DatabaseChecker")
+    def test_metrics_enabled_successful_start(
+        self, mock_checker_class: Mock, mock_metrics_class: Mock
+    ) -> None:
+        """Test metrics initialization when enabled and prometheus available."""
+        mock_metrics = MagicMock()
+        mock_metrics._prometheus_available = True
+        mock_metrics_class.return_value = mock_metrics
+
+        config = Config(
+            database=DatabaseConfig(database="testdb", password="secret"),
+            monitor=MonitorConfig(),
+            logging=LoggingConfig(),
+            metrics=MetricsConfig(enabled=True, port=9090),
+        )
+
+        app = Application(config)
+
+        mock_metrics_class.assert_called_once()
+        mock_metrics.start_server.assert_called_once()
+        assert app.metrics is mock_metrics
+
+    @patch("db_up.main.MetricsCollector")
+    @patch("db_up.main.DatabaseChecker")
+    def test_metrics_prometheus_not_available(
+        self, mock_checker_class: Mock, mock_metrics_class: Mock
+    ) -> None:
+        """Test metrics disabled when prometheus-client not installed."""
+        mock_metrics = MagicMock()
+        mock_metrics._prometheus_available = False
+        mock_metrics_class.return_value = mock_metrics
+
+        config = Config(
+            database=DatabaseConfig(database="testdb", password="secret"),
+            monitor=MonitorConfig(),
+            logging=LoggingConfig(),
+            metrics=MetricsConfig(enabled=True, port=9090),
+        )
+
+        app = Application(config)
+
+        # Metrics should be None since prometheus not available
+        assert app.metrics is None
+        mock_metrics.start_server.assert_not_called()
+
+    @patch("db_up.main.MetricsCollector")
+    @patch("db_up.main.DatabaseChecker")
+    def test_metrics_server_start_failure(
+        self, mock_checker_class: Mock, mock_metrics_class: Mock
+    ) -> None:
+        """Test metrics disabled when server fails to start."""
+        mock_metrics = MagicMock()
+        mock_metrics._prometheus_available = True
+        mock_metrics.start_server.side_effect = OSError("Port in use")
+        mock_metrics_class.return_value = mock_metrics
+
+        config = Config(
+            database=DatabaseConfig(database="testdb", password="secret"),
+            monitor=MonitorConfig(),
+            logging=LoggingConfig(),
+            metrics=MetricsConfig(enabled=True, port=9090),
+        )
+
+        app = Application(config)
+
+        # Metrics should be None since server failed to start
+        assert app.metrics is None
+        mock_metrics.start_server.assert_called_once()
+
+    @patch("db_up.main.MetricsCollector")
+    @patch("db_up.main.DatabaseChecker")
+    def test_metrics_disabled_by_config(
+        self, mock_checker_class: Mock, mock_metrics_class: Mock
+    ) -> None:
+        """Test metrics not initialized when disabled in config."""
+        config = Config(
+            database=DatabaseConfig(database="testdb", password="secret"),
+            monitor=MonitorConfig(),
+            logging=LoggingConfig(),
+            metrics=MetricsConfig(enabled=False),
+        )
+
+        app = Application(config)
+
+        # Metrics should be None when disabled
+        assert app.metrics is None
+        mock_metrics_class.assert_not_called()
+
+    @patch("db_up.main.MetricsCollector")
+    @patch("db_up.main.DatabaseChecker")
+    @patch("db_up.main.time.sleep")
+    def test_shutdown_calls_metrics_shutdown(
+        self,
+        mock_sleep: Mock,
+        mock_checker_class: Mock,
+        mock_metrics_class: Mock,
+    ) -> None:
+        """Test that run() calls metrics shutdown on exit."""
+        mock_metrics = MagicMock()
+        mock_metrics._prometheus_available = True
+        mock_metrics_class.return_value = mock_metrics
+
+        mock_checker = Mock()
+        mock_result = HealthCheckResult(
+            timestamp=datetime.utcnow(), status="success", response_time_ms=45.0
+        )
+        mock_checker.check_connection.return_value = mock_result
+        mock_checker_class.return_value = mock_checker
+
+        config = Config(
+            database=DatabaseConfig(database="testdb", password="secret"),
+            monitor=MonitorConfig(check_interval=10),
+            logging=LoggingConfig(),
+            metrics=MetricsConfig(enabled=True, port=9090),
+        )
+
+        app = Application(config)
+
+        # Stop immediately
+        def stop_immediately(*args: object) -> None:
+            app.running = False
+
+        mock_sleep.side_effect = stop_immediately
+
+        app.run()
+
+        # Verify shutdown was called
+        mock_metrics.shutdown.assert_called_once()
+
+    @patch("db_up.main.MetricsCollector")
+    @patch("db_up.main.DatabaseChecker")
+    def test_shutdown_handles_metrics_error(
+        self, mock_checker_class: Mock, mock_metrics_class: Mock
+    ) -> None:
+        """Test that _shutdown handles errors from metrics.shutdown()."""
+        mock_metrics = MagicMock()
+        mock_metrics._prometheus_available = True
+        mock_metrics.shutdown.side_effect = RuntimeError("Shutdown error")
+        mock_metrics_class.return_value = mock_metrics
+
+        config = Config(
+            database=DatabaseConfig(database="testdb", password="secret"),
+            monitor=MonitorConfig(),
+            logging=LoggingConfig(),
+            metrics=MetricsConfig(enabled=True, port=9090),
+        )
+
+        app = Application(config)
+
+        # Should not raise exception
+        app._shutdown()
+        mock_metrics.shutdown.assert_called_once()
+
+    @patch("db_up.main.MetricsCollector")
+    @patch("db_up.main.DatabaseChecker")
+    def test_run_once_records_metrics(
+        self, mock_checker_class: Mock, mock_metrics_class: Mock
+    ) -> None:
+        """Test that run_once records metrics when enabled."""
+        mock_metrics = MagicMock()
+        mock_metrics._prometheus_available = True
+        mock_metrics_class.return_value = mock_metrics
+
+        mock_checker = Mock()
+        mock_result = HealthCheckResult(
+            timestamp=datetime.utcnow(), status="success", response_time_ms=45.0
+        )
+        mock_checker.check_connection.return_value = mock_result
+        mock_checker_class.return_value = mock_checker
+
+        config = Config(
+            database=DatabaseConfig(database="testdb", password="secret"),
+            monitor=MonitorConfig(),
+            logging=LoggingConfig(),
+            metrics=MetricsConfig(enabled=True, port=9090),
+        )
+
+        app = Application(config)
+        app.run_once()
+
+        # Verify metrics were recorded
+        mock_metrics.record_check.assert_called_once_with(mock_result)

@@ -10,7 +10,7 @@ SECURITY: All functions in this module must be thoroughly tested.
 """
 
 import re
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 
 def sanitize_error(error: str, redact_hostnames: bool = False) -> str:
@@ -119,7 +119,7 @@ def redact_connection_string(conn_string: str) -> str:
     return redacted
 
 
-def redact_config_for_logging(config_dict: dict) -> dict:
+def redact_config_for_logging(config_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
     Redact sensitive fields from a configuration dictionary for logging.
 

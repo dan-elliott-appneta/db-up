@@ -1,0 +1,97 @@
+# Prometheus Configuration for db-up
+#
+# This is an example prometheus.yml configuration for scraping
+# db-up metrics. Add this to your Prometheus configuration.
+#
+# Usage:
+#   1. Enable metrics in db-up: DB_METRICS_ENABLED=true
+#   2. Add this scrape config to your prometheus.yml
+#   3. Reload Prometheus configuration
+
+# Add this to your prometheus.yml under scrape_configs:
+scrape_configs:
+  - job_name: 'db-up'
+    # Scrape interval (how often to collect metrics)
+    scrape_interval: 15s
+
+    # Scrape timeout (must be less than scrape_interval)
+    scrape_timeout: 10s
+
+    # Static targets (for single instance)
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          environment: 'production'
+          service: 'db-up'
+
+    # Or use service discovery for multiple instances:
+    # kubernetes_sd_configs:
+    #   - role: pod
+    # relabel_configs:
+    #   - source_labels: [__meta_kubernetes_pod_label_app]
+    #     regex: db-up
+    #     action: keep
+
+# Example alerting rules (save as alerts/db-up.yml)
+# groups:
+#   - name: db-up
+#     rules:
+#       - alert: DatabaseDown
+#         expr: db_up_connection_status == 0
+#         for: 1m
+#         labels:
+#           severity: critical
+#         annotations:
+#           summary: "Database {{ $labels.database }} is down"
+#           description: "Database connection to {{ $labels.database }}@{{ $labels.host }} has been failing for more than 1 minute."
+#
+#       - alert: DatabaseSlowResponse
+#         expr: histogram_quantile(0.95, rate(db_up_check_duration_seconds_bucket[5m])) > 1.0
+#         for: 5m
+#         labels:
+#           severity: warning
+#         annotations:
+#           summary: "Database {{ $labels.database }} responding slowly"
+#           description: "95th percentile response time for {{ $labels.database }} is above 1 second."
+#
+#       - alert: DatabaseHighErrorRate
+#         expr: rate(db_up_errors_total[5m]) > 0.1
+#         for: 5m
+#         labels:
+#           severity: warning
+#         annotations:
+#           summary: "High error rate for database {{ $labels.database }}"
+#           description: "Error rate is {{ $value }} errors per second."
+
+# Metrics exposed by db-up:
+#
+# db_up_connection_status{database="mydb", host="localhost"}
+#   - Gauge: Current connection status (1=up, 0=down)
+#
+# db_up_check_duration_seconds{database="mydb", host="localhost"}
+#   - Histogram: Duration of health checks in seconds
+#   - Useful for SLI/SLO tracking
+#
+# db_up_checks_total{database="mydb", host="localhost", status="success|failure"}
+#   - Counter: Total number of health checks by status
+#   - Use rate() to calculate check rate
+#
+# db_up_errors_total{database="mydb", host="localhost", error_code="CONNECTION_ERROR"}
+#   - Counter: Total number of errors by error code
+#   - Use rate() to calculate error rate
+
+# Useful PromQL queries:
+#
+# Database uptime percentage (last hour):
+#   avg_over_time(db_up_connection_status{database="mydb"}[1h]) * 100
+#
+# Health check success rate:
+#   sum(rate(db_up_checks_total{status="success"}[5m])) /
+#   sum(rate(db_up_checks_total[5m])) * 100
+#
+# 95th percentile response time:
+#   histogram_quantile(0.95, rate(db_up_check_duration_seconds_bucket[5m]))
+#
+# Average response time:
+#   rate(db_up_check_duration_seconds_sum[5m]) /
+#   rate(db_up_check_duration_seconds_count[5m])

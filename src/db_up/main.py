@@ -8,12 +8,13 @@ import sys
 import signal
 import time
 import argparse
-from typing import Any
+from typing import Any, Optional
 
 from db_up.config import load_config
 from db_up.logger import setup_logging
 from db_up.db_checker import DatabaseChecker
 from db_up.models import Config
+from db_up.metrics import MetricsCollector
 
 
 class Application:
@@ -41,6 +42,38 @@ class Application:
             config.database, redact_hostnames=config.logging.redact_hostnames
         )
         self.check_count = 0
+
+        # Initialize metrics collector if enabled
+        self.metrics: Optional[MetricsCollector] = None
+        if config.metrics.enabled:
+            self.metrics = MetricsCollector(
+                database=config.database.database,
+                host=config.database.host,
+                port=config.metrics.port,
+                metrics_host=config.metrics.host,
+                histogram_buckets=config.metrics.histogram_buckets,
+            )
+            if not self.metrics._prometheus_available:
+                self.logger.warning(
+                    "=" * 60 + "\n"
+                    "METRICS DISABLED: prometheus-client not installed.\n"
+                    "Install with: pip install prometheus-client\n"
+                    "Or: pip install db-up[metrics]\n"
+                    + "=" * 60
+                )
+                self.metrics = None
+            else:
+                try:
+                    self.metrics.start_server()
+                except Exception as e:
+                    self.logger.error(
+                        "=" * 60 + "\n"
+                        f"METRICS SERVER FAILED TO START: {e}\n"
+                        f"Check if port {config.metrics.port} is available.\n"
+                        "Metrics collection will be disabled for this session.\n"
+                        + "=" * 60
+                    )
+                    self.metrics = None
 
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -71,6 +104,10 @@ class Application:
 
         result = self.checker.check_connection()
 
+        # Record metrics if enabled
+        if self.metrics:
+            self.metrics.record_check(result)
+
         if result.is_success():
             ms = result.response_time_ms
             self.logger.info(f"✓ Health check passed - Response time: {ms:.0f}ms")
@@ -99,6 +136,10 @@ class Application:
 
             try:
                 result = self.checker.check_connection()
+
+                # Record metrics if enabled
+                if self.metrics:
+                    self.metrics.record_check(result)
 
                 if result.is_success():
                     response_ms = result.response_time_ms
@@ -134,7 +175,16 @@ class Application:
             if self.running:
                 time.sleep(self.config.monitor.check_interval)
 
+        self._shutdown()
         self.logger.info(f"Shutting down after {self.check_count} health checks")
+
+    def _shutdown(self) -> None:
+        """Clean up resources during shutdown."""
+        if self.metrics:
+            try:
+                self.metrics.shutdown()
+            except Exception as e:
+                self.logger.warning(f"Error shutting down metrics server: {e}")
 
 
 def parse_args() -> argparse.Namespace:
