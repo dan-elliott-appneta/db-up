@@ -28,6 +28,13 @@ Run all checks at once:
 flake8 src tests && mypy src && pytest -v
 ```
 
+## Code Quality Standards
+
+- **Linting**: Full flake8 checks (max-line-length=88, complexity=10)
+- **Type Checking**: Strict mypy settings enabled (disallow_untyped_defs, etc.)
+- **Formatting**: Black with 88-char line length
+- **Tests**: 173 tests with 97% coverage
+
 ## Project Structure
 
 - `src/db_up/` - Main source code

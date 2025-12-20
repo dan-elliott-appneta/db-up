@@ -67,11 +67,14 @@ python_version = "3.9"
 warn_return_any = true
 warn_unused_configs = true
 ignore_missing_imports = true
-# Relaxed settings until type issues are fixed
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-check_untyped_defs = false
+# Strict type checking enabled
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
 no_implicit_optional = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_ignores = true
 
 [tool.coverage.run]
 source = ["src"]

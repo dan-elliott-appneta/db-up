@@ -20,4 +20,3 @@ from db_up.db_checker import DatabaseChecker
 from db_up.main import Application
 from db_up.config import load_config
 from db_up.logger import setup_logging
-
