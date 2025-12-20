@@ -42,6 +42,7 @@ class MetricsCollector:
         self.port = port
         self.metrics_host = metrics_host
         self._server_started = False
+        self._server = None  # HTTP server instance for cleanup
 
         try:
             from prometheus_client import Counter, Gauge, Histogram, start_http_server
@@ -110,7 +111,9 @@ class MetricsCollector:
             return
 
         try:
-            self._start_http_server(self.port, addr=self.metrics_host)
+            # start_http_server returns (server, thread) tuple
+            server_info = self._start_http_server(self.port, addr=self.metrics_host)
+            self._server = server_info[0] if server_info else None
             self._server_started = True
             url = f"http://{self.metrics_host}:{self.port}/metrics"
             logger.info(f"Metrics server started on {url}")
@@ -151,3 +154,19 @@ class MetricsCollector:
             self._errors_total.labels(
                 **labels, error_code=result.error_code
             ).inc()
+
+    def shutdown(self) -> None:
+        """
+        Shutdown the metrics HTTP server.
+
+        This method should be called during application shutdown to properly
+        clean up the background server thread.
+        """
+        if self._server is not None:
+            try:
+                self._server.shutdown()
+                self._server_started = False
+                self._server = None
+                logger.info("Metrics server shut down")
+            except Exception as e:
+                logger.warning(f"Error shutting down metrics server: {e}")

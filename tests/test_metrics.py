@@ -140,6 +140,34 @@ class TestMetricsCollectorWithPrometheus:
         with pytest.raises(OSError, match="Port 9090 already in use"):
             collector.start_server()
 
+    def test_shutdown_server(self, mock_prometheus: Mock) -> None:
+        """Test shutting down the metrics HTTP server."""
+        mock_server = MagicMock()
+        mock_prometheus["start_http_server"].return_value = (mock_server, None)
+
+        collector = MetricsCollector(
+            database="testdb", host="localhost", port=9090
+        )
+
+        collector.start_server()
+        assert collector._server_started is True
+        assert collector._server is mock_server
+
+        collector.shutdown()
+        mock_server.shutdown.assert_called_once()
+        assert collector._server_started is False
+        assert collector._server is None
+
+    def test_shutdown_without_server(self, mock_prometheus: Mock) -> None:
+        """Test shutting down when server was never started."""
+        collector = MetricsCollector(
+            database="testdb", host="localhost", port=9090
+        )
+
+        # Should not raise error
+        collector.shutdown()
+        assert collector._server_started is False
+
     def test_record_successful_check(self, mock_prometheus: Mock) -> None:
         """Test recording a successful health check."""
         collector = MetricsCollector(
