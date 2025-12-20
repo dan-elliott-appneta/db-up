@@ -296,6 +296,10 @@ db-up/
 
 A complete monitoring stack is included for testing and development. It includes PostgreSQL, db-up with metrics enabled, Prometheus, and Grafana with a pre-configured dashboard.
 
+### Security Note
+
+> **For Development/Testing Only**: This stack uses default credentials and runs services as root. DO NOT use this configuration in production without proper security hardening.
+
 ### Quick Start
 
 ```bash
