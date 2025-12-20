@@ -281,7 +281,8 @@ def _load_metrics_config(file_config: Dict[str, Any]) -> MetricsConfig:
     enabled = _parse_bool(
         os.getenv("DB_METRICS_ENABLED"), file_config.get("enabled", False)
     )
-    port = int(os.getenv("DB_METRICS_PORT", file_config.get("port", 9090)))
+    port_str = os.getenv("DB_METRICS_PORT")
+    port = int(port_str) if port_str else int(file_config.get("port", 9090))
     host = os.getenv("DB_METRICS_HOST") or file_config.get("host", "0.0.0.0")
 
     return MetricsConfig(
