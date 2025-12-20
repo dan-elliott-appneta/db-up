@@ -15,6 +15,12 @@ from db_up.logger import setup_logging, get_logger
 from db_up.db_checker import DatabaseChecker
 from db_up.models import Config
 
+try:
+    from db_up.metrics import MetricsCollector, PROMETHEUS_AVAILABLE
+except ImportError:
+    PROMETHEUS_AVAILABLE = False
+    MetricsCollector = None
+
 
 class Application:
     """
@@ -30,7 +36,7 @@ class Application:
     def __init__(self, config: Config):
         """
         Initialize the application.
-        
+
         Args:
             config: Application configuration
         """
@@ -42,7 +48,29 @@ class Application:
             redact_hostnames=config.logging.redact_hostnames
         )
         self.check_count = 0
-        
+        self.metrics_collector: Optional['MetricsCollector'] = None
+
+        # Initialize metrics if enabled
+        if config.metrics.enabled:
+            if not PROMETHEUS_AVAILABLE:
+                self.logger.warning(
+                    "Metrics are enabled but prometheus-client is not installed. "
+                    "Install with: pip install prometheus-client"
+                )
+            else:
+                try:
+                    self.metrics_collector = MetricsCollector(
+                        database=config.database.database,
+                        host=config.database.host,
+                        config=config.metrics
+                    )
+                    self.metrics_collector.start_server()
+                    self.logger.info(
+                        f"Metrics server started on http://{config.metrics.host}:{config.metrics.port}/metrics"
+                    )
+                except Exception as e:
+                    self.logger.error(f"Failed to start metrics server: {e}")
+
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
@@ -62,16 +90,20 @@ class Application:
     def run_once(self) -> int:
         """
         Run a single health check.
-        
+
         This is useful for testing or one-off checks.
-        
+
         Returns:
             Exit code: 0 for success, 1 for failure
         """
         self.logger.info("Running single health check...")
-        
+
         result = self.checker.check_connection()
-        
+
+        # Record metrics if enabled
+        if self.metrics_collector:
+            self.metrics_collector.record_check(result)
+
         if result.is_success():
             self.logger.info(
                 f"✓ Health check passed - Response time: {result.response_time_ms:.0f}ms"
@@ -99,10 +131,14 @@ class Application:
         
         while self.running:
             self.check_count += 1
-            
+
             try:
                 result = self.checker.check_connection()
-                
+
+                # Record metrics if enabled
+                if self.metrics_collector:
+                    self.metrics_collector.record_check(result)
+
                 if result.is_success():
                     self.logger.info(
                         f"Health check passed - Response time: {result.response_time_ms:.0f}ms",
@@ -123,7 +159,7 @@ class Application:
                             'check_number': self.check_count,
                         }
                     )
-            
+
             except Exception as e:
                 self.logger.error(
                     f"Unexpected error during health check: {e}",

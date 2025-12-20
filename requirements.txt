@@ -8,3 +8,6 @@ python-dotenv==1.0.0
 # Logging
 colorama==0.4.6
 
+# Metrics (optional)
+prometheus-client==0.19.0
+

@@ -209,15 +209,37 @@ class LoggingConfig:
 
 
 @dataclass
+class MetricsConfig:
+    """
+    Configuration for Prometheus metrics.
+
+    Attributes:
+        enabled: Whether metrics collection is enabled (default: False)
+        port: Port to expose metrics on (default: 9090)
+        host: Host to bind metrics server to (default: 0.0.0.0)
+    """
+
+    enabled: bool = False
+    port: int = 9090
+    host: str = "0.0.0.0"
+
+    def __post_init__(self) -> None:
+        """Validate metrics configuration."""
+        if not (1024 <= self.port <= 65535):
+            raise ValueError(f"Invalid metrics port {self.port}. Must be between 1024 and 65535.")
+
+
+@dataclass
 class Config:
     """
     Complete application configuration.
-    
+
     This is the top-level configuration object that combines all
     configuration sections.
     """
-    
+
     database: DatabaseConfig
     monitor: MonitorConfig = field(default_factory=MonitorConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
+    metrics: MetricsConfig = field(default_factory=MetricsConfig)
 
