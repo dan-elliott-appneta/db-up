@@ -56,11 +56,14 @@ class MetricsCollector:
                 ["database", "host"],
             )
 
+            # Buckets include 5.0s to match default connection timeout
             self._check_duration = Histogram(
                 "db_up_check_duration_seconds",
                 "Duration of health checks in seconds",
                 ["database", "host"],
-                buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5),
+                buckets=(
+                    0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0
+                ),
             )
 
             self._checks_total = Counter(
