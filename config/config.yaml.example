@@ -50,3 +50,8 @@ logging:
   redact_credentials: true     # default: true (NEVER set to false in production)
   redact_hostnames: false      # set true to hide internal infrastructure
 
+# Prometheus Metrics Configuration
+metrics:
+  enabled: false               # default: false, set true to enable Prometheus metrics
+  port: 9090                   # default: 9090, HTTP server port for /metrics endpoint
+

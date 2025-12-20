@@ -20,6 +20,7 @@ from db_up.models import (
     DatabaseConfig,
     MonitorConfig,
     LoggingConfig,
+    MetricsConfig,
 )
 
 
@@ -53,11 +54,13 @@ def load_config(config_file: Optional[str] = None) -> Config:
     database_config = _load_database_config(file_config.get('database', {}))
     monitor_config = _load_monitor_config(file_config.get('monitor', {}))
     logging_config = _load_logging_config(file_config.get('logging', {}))
-    
+    metrics_config = _load_metrics_config(file_config.get('metrics', {}))
+
     return Config(
         database=database_config,
         monitor=monitor_config,
         logging=logging_config,
+        metrics=metrics_config,
     )
 
 
@@ -246,19 +249,38 @@ def _load_logging_config(file_config: Dict[str, Any]) -> LoggingConfig:
     )
 
 
+def _load_metrics_config(file_config: Dict[str, Any]) -> MetricsConfig:
+    """
+    Load metrics configuration with environment variable priority.
+
+    Args:
+        file_config: Metrics section from config file
+
+    Returns:
+        MetricsConfig object
+    """
+    enabled = _parse_bool(os.getenv('DB_METRICS_ENABLED'), file_config.get('enabled', False))
+    port = int(os.getenv('DB_METRICS_PORT', file_config.get('port', 9090)))
+
+    return MetricsConfig(
+        enabled=enabled,
+        port=port,
+    )
+
+
 def _parse_bool(env_value: Optional[str], default: bool) -> bool:
     """
     Parse boolean value from environment variable or use default.
-    
+
     Args:
         env_value: Environment variable value (string or None)
         default: Default value if env_value is None
-    
+
     Returns:
         Boolean value
     """
     if env_value is None:
         return default
-    
+
     return env_value.lower() in ('true', '1', 'yes', 'on')
 

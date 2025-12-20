@@ -14,6 +14,7 @@ from db_up.config import load_config
 from db_up.logger import setup_logging, get_logger
 from db_up.db_checker import DatabaseChecker
 from db_up.models import Config
+from db_up.metrics import MetricsCollector
 
 
 class Application:
@@ -30,7 +31,7 @@ class Application:
     def __init__(self, config: Config):
         """
         Initialize the application.
-        
+
         Args:
             config: Application configuration
         """
@@ -42,7 +43,15 @@ class Application:
             redact_hostnames=config.logging.redact_hostnames
         )
         self.check_count = 0
-        
+
+        # Initialize Prometheus metrics collector
+        self.metrics = MetricsCollector(
+            database_name=config.database.database,
+            database_host=config.database.host,
+            enabled=config.metrics.enabled,
+            port=config.metrics.port if config.metrics.enabled else None
+        )
+
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
@@ -62,16 +71,19 @@ class Application:
     def run_once(self) -> int:
         """
         Run a single health check.
-        
+
         This is useful for testing or one-off checks.
-        
+
         Returns:
             Exit code: 0 for success, 1 for failure
         """
         self.logger.info("Running single health check...")
-        
+
         result = self.checker.check_connection()
-        
+
+        # Record metrics
+        self.metrics.record_check_result(result)
+
         if result.is_success():
             self.logger.info(
                 f"✓ Health check passed - Response time: {result.response_time_ms:.0f}ms"
@@ -102,7 +114,10 @@ class Application:
             
             try:
                 result = self.checker.check_connection()
-                
+
+                # Record metrics
+                self.metrics.record_check_result(result)
+
                 if result.is_success():
                     self.logger.info(
                         f"Health check passed - Response time: {result.response_time_ms:.0f}ms",

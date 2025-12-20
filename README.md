@@ -10,6 +10,7 @@ A simple, secure tool to monitor PostgreSQL database connectivity with configura
 - 🧪 **Fully Tested**: 171 tests with 97% code coverage
 - 👤 **Easy to Use**: Zero-config quick start, works with just `DB_PASSWORD` and `DB_NAME`
 - 📊 **Configurable Logging**: DEBUG/INFO/WARNING/ERROR levels, text or JSON format, console or file output
+- 📈 **Prometheus Metrics**: Export connection status, check duration, and error metrics for monitoring
 - 🔄 **Smart Retries**: Exponential backoff with jitter to prevent thundering herd
 - 🎯 **Dependency Injection**: Fully testable architecture with mock-friendly interfaces
 - 🐳 **Docker Ready**: Container deployment with examples included
@@ -135,6 +136,8 @@ Configuration is loaded with the following priority:
 | `DB_LOG_LEVEL` | Log level (DEBUG/INFO/WARNING/ERROR) | `INFO` |
 | `DB_LOG_FORMAT` | Log format (text/json) | `text` |
 | `DB_LOG_OUTPUT` | Output (console/file/both) | `console` |
+| `DB_METRICS_ENABLED` | Enable Prometheus metrics (true/false) | `false` |
+| `DB_METRICS_PORT` | Port for metrics HTTP server | `9090` |
 
 ### Configuration File Format
 
@@ -181,6 +184,63 @@ Example:
 ```
 # Input:  "connection failed: password=secret123"
 # Output: "connection failed: password=***"
+```
+
+## Prometheus Metrics
+
+db-up can export Prometheus metrics for monitoring and alerting.
+
+### Enabling Metrics
+
+```bash
+# Enable via environment variable
+export DB_METRICS_ENABLED=true
+export DB_METRICS_PORT=9090
+db-up
+```
+
+Or via configuration file:
+```yaml
+metrics:
+  enabled: true
+  port: 9090
+```
+
+Metrics will be available at `http://localhost:9090/metrics`
+
+### Available Metrics
+
+| Metric | Type | Description | Labels |
+|--------|------|-------------|--------|
+| `db_up_connection_status` | Gauge | Current connection status (1=up, 0=down) | database, host |
+| `db_up_check_duration_seconds` | Histogram | Time taken for health checks | database, host |
+| `db_up_checks_total` | Counter | Total number of health checks | database, host, status |
+| `db_up_errors_total` | Counter | Total number of errors | database, host, error_code |
+
+### Example Prometheus Configuration
+
+```yaml
+scrape_configs:
+  - job_name: 'db-up'
+    static_configs:
+      - targets: ['localhost:9090']
+```
+
+### Example Grafana Queries
+
+**Connection Status:**
+```promql
+db_up_connection_status{database="mydb"}
+```
+
+**Average Check Duration (5m):**
+```promql
+rate(db_up_check_duration_seconds_sum[5m]) / rate(db_up_check_duration_seconds_count[5m])
+```
+
+**Error Rate:**
+```promql
+rate(db_up_errors_total[5m])
 ```
 
 ## Security Features
@@ -362,7 +422,7 @@ export DB_SSL_MODE=disable
 - [ ] Web UI for status visualization
 - [ ] Support for multiple databases
 - [ ] Webhook notifications
-- [ ] Prometheus metrics export
+- [x] Prometheus metrics export
 - [ ] Historical uptime tracking
 - [ ] Support for other databases (MySQL, MongoDB)
 
