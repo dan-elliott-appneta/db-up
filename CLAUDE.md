@@ -41,8 +41,19 @@ flake8 src tests && mypy src && pytest -v
 ```bash
 ./install.sh --venv .venv --dev
 source .venv/bin/activate
+
+# Optional: Install pre-commit hooks
+pip install pre-commit
+pre-commit install
 ```
+
+## Pre-commit Hooks
+
+This project uses pre-commit hooks to enforce code quality. After installing:
+- Hooks run automatically on `git commit`
+- Tests run on `git push`
+- Run manually: `pre-commit run --all-files`
 
 ## Python Version
 
-This project requires Python 3.9 or higher.
+This project requires Python 3.9 or higher (tested up to 3.13).
