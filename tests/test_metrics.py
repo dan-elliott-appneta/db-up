@@ -65,7 +65,9 @@ class TestMetricsConfig:
 
     def test_invalid_negative_histogram_buckets(self) -> None:
         """Test MetricsConfig rejects negative histogram buckets."""
-        with pytest.raises(ValueError, match="histogram_buckets values must be positive"):
+        with pytest.raises(
+            ValueError, match="histogram_buckets values must be positive"
+        ):
             MetricsConfig(histogram_buckets=(0.1, -0.5, 1.0))
 
 
