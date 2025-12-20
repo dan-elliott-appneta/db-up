@@ -54,20 +54,54 @@ Use db-up when you need to:
 - PostgreSQL database (any version)
 - pip (Python package installer)
 
-### Method 1: Install from Source
+### Method 1: Install Script (Recommended)
+
+The easiest way to install db-up is using the install script:
 
 ```bash
 # Clone or download the repository
 cd db-up
 
-# Install the package
-pip install -e .
+# Install with virtual environment
+./install.sh --venv .venv
+source .venv/bin/activate
 
 # Verify installation
 db-up --version
 ```
 
-### Method 2: Docker
+Install script options:
+- `--venv PATH` - Install in a virtual environment at PATH
+- `--dev` - Include development dependencies (pytest, black, etc.)
+- `--global` - Install globally (may require sudo)
+- `--help` - Show help message
+
+Examples:
+```bash
+# Install in virtual environment
+./install.sh --venv .venv
+
+# Install with development tools
+./install.sh --venv .venv --dev
+
+# Install globally for current user
+./install.sh
+```
+
+### Method 2: Install with pip
+
+```bash
+# Basic installation
+pip install -e .
+
+# With development dependencies
+pip install -e ".[dev]"
+
+# Verify installation
+db-up --version
+```
+
+### Method 3: Docker
 
 ```bash
 # Pull the image (when published)
@@ -1001,6 +1035,6 @@ DB_LOG_REDACT_HOSTNAMES=false
 
 ---
 
-**Last Updated**: December 15, 2025  
+**Last Updated**: December 19, 2025
 **Version**: 1.0.0
 

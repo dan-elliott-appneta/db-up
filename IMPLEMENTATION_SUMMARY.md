@@ -11,13 +11,16 @@ Successfully implemented **db-up**, a PostgreSQL database connectivity monitorin
 - **Test Coverage**: 97%
 - **Total Tests**: 171 tests
 - **All Tests**: ✅ PASSING
+- **CI/CD**: ✅ GitHub Actions passing (Python 3.9, 3.10, 3.11)
 
 ### Commits
-- **Total Commits**: 10
+- **Total Commits**: 13
 - **Feature Commits**: 7
 - **Test Fix**: 1
 - **Documentation**: 1
 - **Initial Setup**: 1
+- **Installation/Packaging**: 2
+- **CI/CD Fix**: 1
 
 ## Completed Features
 
@@ -199,6 +202,36 @@ All components use dependency injection for testability:
 - Automatic credential redaction
 - Input validation everywhere
 
+## Recent Improvements (December 2025)
+
+### Installation & Packaging Fixes
+The installation process was significantly improved:
+
+1. **Fixed pyproject.toml** - Added missing sections:
+   - `[project.dependencies]` - Runtime dependencies now properly installed
+   - `[project.scripts]` - Entry point for `db-up` command
+   - `[project.optional-dependencies]` - Dev dependencies (`pip install -e ".[dev]"`)
+   - `[tool.setuptools.packages.find]` - Package discovery configuration
+
+2. **Created install.sh** - User-friendly installation script:
+   - Checks Python 3.8+ requirement
+   - Validates pip and venv availability
+   - Supports `--venv PATH` for virtual environment installation
+   - Supports `--dev` for development dependencies
+   - Provides helpful error messages and next steps
+
+3. **Simplified setup.py** - Now a minimal backwards-compatibility shim
+
+4. **Updated Makefile** - Added new targets:
+   - `install-venv` - Install in virtual environment
+   - `install-venv-dev` - Install with dev dependencies
+
+### CI/CD Fixes
+Fixed GitHub Actions workflow:
+- Changed from manually installing `pytest` and `flake8` to using `pip install -e ".[dev]"`
+- This ensures `pytest-cov` is installed (required by pyproject.toml pytest options)
+- All Python versions (3.9, 3.10, 3.11) now passing
+
 ## What Was NOT Implemented
 
 The following items from PLAN.md Phase 4 (Advanced Features) were intentionally left for future enhancements:
@@ -266,6 +299,14 @@ These are documented in the README roadmap section.
 
 ### Quick Start
 ```bash
+# Option 1: Use install script (recommended)
+./install.sh --venv .venv
+source .venv/bin/activate
+
+# Option 2: Use pip directly
+pip install -e .
+
+# Set environment variables and run
 export DB_NAME=mydb DB_PASSWORD=secret
 db-up
 ```
@@ -282,7 +323,15 @@ docker-compose up
 
 ### Development
 ```bash
-make install-dev
+# Option 1: Use install script
+./install.sh --venv .venv --dev
+source .venv/bin/activate
+
+# Option 2: Use make
+make install-venv-dev
+source .venv/bin/activate
+
+# Run tests and linters
 make test-cov
 make lint
 ```
