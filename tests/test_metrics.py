@@ -45,6 +45,29 @@ class TestMetricsConfig:
         config_max = MetricsConfig(port=65535)
         assert config_max.port == 65535
 
+    def test_default_histogram_buckets(self) -> None:
+        """Test MetricsConfig has correct default histogram buckets."""
+        config = MetricsConfig()
+        assert config.histogram_buckets == (
+            0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0
+        )
+
+    def test_custom_histogram_buckets(self) -> None:
+        """Test MetricsConfig accepts custom histogram buckets."""
+        custom_buckets = (0.1, 0.5, 1.0, 5.0, 10.0)
+        config = MetricsConfig(histogram_buckets=custom_buckets)
+        assert config.histogram_buckets == custom_buckets
+
+    def test_invalid_empty_histogram_buckets(self) -> None:
+        """Test MetricsConfig rejects empty histogram buckets."""
+        with pytest.raises(ValueError, match="histogram_buckets cannot be empty"):
+            MetricsConfig(histogram_buckets=())
+
+    def test_invalid_negative_histogram_buckets(self) -> None:
+        """Test MetricsConfig rejects negative histogram buckets."""
+        with pytest.raises(ValueError, match="histogram_buckets values must be positive"):
+            MetricsConfig(histogram_buckets=(0.1, -0.5, 1.0))
+
 
 class TestMetricsCollectorWithPrometheus:
     """Tests for MetricsCollector when prometheus-client is available."""
@@ -447,3 +470,55 @@ class TestMetricsCollectorWithoutPrometheus:
 
         # Should complete without error
         collector.record_check(result)
+
+
+class TestMetricsIntegration:
+    """Integration tests for Prometheus metrics HTTP endpoint."""
+
+    @pytest.fixture
+    def free_port(self) -> int:
+        """Get a free port for testing."""
+        import socket
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("", 0))
+            return s.getsockname()[1]
+
+    def test_http_endpoint_exposes_metrics(self, free_port: int) -> None:
+        """Test that HTTP endpoint exposes Prometheus metrics."""
+        pytest.importorskip("prometheus_client")
+        import urllib.request
+
+        # Create collector with real prometheus_client
+        collector = MetricsCollector(
+            database="testdb",
+            host="localhost",
+            port=free_port,
+            metrics_host="127.0.0.1",
+        )
+
+        try:
+            collector.start_server()
+
+            # Record a check to populate metrics
+            result = HealthCheckResult(
+                timestamp=datetime.utcnow(),
+                status="success",
+                response_time_ms=25.0,
+            )
+            collector.record_check(result)
+
+            # Fetch metrics from HTTP endpoint
+            url = f"http://127.0.0.1:{free_port}/metrics"
+            response = urllib.request.urlopen(url, timeout=5)
+            content = response.read().decode("utf-8")
+
+            # Verify expected metrics are present
+            assert "db_up_connection_status" in content
+            assert "db_up_check_duration_seconds" in content
+            assert "db_up_checks_total" in content
+            assert 'database="testdb"' in content
+            assert 'host="localhost"' in content
+
+        finally:
+            collector.shutdown()

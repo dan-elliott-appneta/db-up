@@ -11,7 +11,7 @@ SECURITY: Passwords must only come from environment variables.
 
 import os
 import yaml
-from typing import Optional, Dict, Any
+from typing import Any, Dict, List, Optional, Tuple
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -284,12 +284,37 @@ def _load_metrics_config(file_config: Dict[str, Any]) -> MetricsConfig:
     port_str = os.getenv("DB_METRICS_PORT")
     port = int(port_str) if port_str else int(file_config.get("port", 9090))
     host = os.getenv("DB_METRICS_HOST") or file_config.get("host", "0.0.0.0")
+    histogram_buckets = _parse_histogram_buckets(
+        file_config.get("histogram_buckets")
+    )
 
     return MetricsConfig(
         enabled=enabled,
         port=port,
         host=host,
+        histogram_buckets=histogram_buckets,
     )
+
+
+def _parse_histogram_buckets(
+    value: Optional[List[float]],
+) -> Tuple[float, ...]:
+    """
+    Parse histogram buckets from config.
+
+    Args:
+        value: List of bucket values from config file, or None
+
+    Returns:
+        Tuple of bucket values, or default buckets if None
+    """
+    # Default buckets (includes 5.0s to match connection timeout)
+    default_buckets = (
+        0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0
+    )
+    if value is None:
+        return default_buckets
+    return tuple(float(v) for v in value)
 
 
 def _parse_bool(env_value: Optional[str], default: bool) -> bool:

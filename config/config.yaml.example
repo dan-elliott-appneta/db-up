@@ -50,3 +50,25 @@ logging:
   redact_credentials: true     # default: true (NEVER set to false in production)
   redact_hostnames: false      # set true to hide internal infrastructure
 
+# Prometheus Metrics Configuration
+# Requires: pip install prometheus-client (or pip install db-up[metrics])
+metrics:
+  enabled: false               # default: false, env: DB_METRICS_ENABLED
+  port: 9090                   # default: 9090, env: DB_METRICS_PORT
+  host: "0.0.0.0"              # default: 0.0.0.0, env: DB_METRICS_HOST
+
+  # Histogram buckets for response time metrics (in seconds)
+  # Default includes 5.0s bucket to match connection timeout
+  histogram_buckets:
+    - 0.001    # 1ms
+    - 0.005    # 5ms
+    - 0.01     # 10ms
+    - 0.025    # 25ms
+    - 0.05     # 50ms
+    - 0.1      # 100ms
+    - 0.25     # 250ms
+    - 0.5      # 500ms
+    - 1.0      # 1s
+    - 2.5      # 2.5s
+    - 5.0      # 5s (matches connection timeout)
+

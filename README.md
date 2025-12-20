@@ -10,6 +10,7 @@ A simple, secure tool to monitor PostgreSQL database connectivity with configura
 - 🧪 **Fully Tested**: 173 tests with 97% code coverage
 - 👤 **Easy to Use**: Zero-config quick start, works with just `DB_PASSWORD` and `DB_NAME`
 - 📊 **Configurable Logging**: DEBUG/INFO/WARNING/ERROR levels, text or JSON format, console or file output
+- 📈 **Prometheus Metrics**: Export metrics for monitoring with Prometheus/Grafana
 - 🔄 **Smart Retries**: Exponential backoff with jitter to prevent thundering herd
 - 🎯 **Dependency Injection**: Fully testable architecture with mock-friendly interfaces
 - 🐳 **Docker Ready**: Container deployment with examples included
@@ -135,6 +136,9 @@ Configuration is loaded with the following priority:
 | `DB_LOG_LEVEL` | Log level (DEBUG/INFO/WARNING/ERROR) | `INFO` |
 | `DB_LOG_FORMAT` | Log format (text/json) | `text` |
 | `DB_LOG_OUTPUT` | Output (console/file/both) | `console` |
+| `DB_METRICS_ENABLED` | Enable Prometheus metrics | `false` |
+| `DB_METRICS_PORT` | Metrics HTTP server port | `9090` |
+| `DB_METRICS_HOST` | Metrics server bind address | `0.0.0.0` |
 
 ### Configuration File Format
 
@@ -357,12 +361,64 @@ export DB_SSL_MODE=disable
 - **Network**: One connection per check interval
 - **Response Time**: Typically <50ms for local databases
 
+## Prometheus Metrics
+
+db-up can export Prometheus metrics for monitoring database connectivity.
+
+### Enabling Metrics
+
+```bash
+# Install with metrics support
+pip install prometheus-client
+
+# Enable metrics
+export DB_METRICS_ENABLED=true
+export DB_METRICS_PORT=9090
+
+# Run db-up
+db-up
+```
+
+Metrics are available at `http://localhost:9090/metrics`
+
+### Available Metrics
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `db_up_connection_status` | Gauge | Current connection status (1=up, 0=down) |
+| `db_up_check_duration_seconds` | Histogram | Duration of health checks in seconds |
+| `db_up_checks_total` | Counter | Total number of health checks by status |
+| `db_up_errors_total` | Counter | Total number of errors by error code |
+
+All metrics include labels: `database`, `host`
+
+### Prometheus Configuration
+
+See [`config/prometheus.yml.example`](config/prometheus.yml.example) for:
+- Scrape configuration
+- Example alerting rules
+- Useful PromQL queries
+
+### Example Grafana Queries
+
+```promql
+# Database uptime percentage (last hour)
+avg_over_time(db_up_connection_status{database="mydb"}[1h]) * 100
+
+# Health check success rate
+sum(rate(db_up_checks_total{status="success"}[5m])) /
+sum(rate(db_up_checks_total[5m])) * 100
+
+# 95th percentile response time
+histogram_quantile(0.95, rate(db_up_check_duration_seconds_bucket[5m]))
+```
+
 ## Roadmap
 
 - [ ] Web UI for status visualization
 - [ ] Support for multiple databases
 - [ ] Webhook notifications
-- [ ] Prometheus metrics export
+- [x] Prometheus metrics export
 - [ ] Historical uptime tracking
 - [ ] Support for other databases (MySQL, MongoDB)
 

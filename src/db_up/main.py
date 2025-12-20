@@ -51,12 +51,29 @@ class Application:
                 host=config.database.host,
                 port=config.metrics.port,
                 metrics_host=config.metrics.host,
+                histogram_buckets=config.metrics.histogram_buckets,
             )
-            try:
-                self.metrics.start_server()
-            except Exception as e:
-                self.logger.error(f"Failed to start metrics server: {e}")
+            if not self.metrics._prometheus_available:
+                self.logger.warning(
+                    "=" * 60 + "\n"
+                    "METRICS DISABLED: prometheus-client not installed.\n"
+                    "Install with: pip install prometheus-client\n"
+                    "Or: pip install db-up[metrics]\n"
+                    + "=" * 60
+                )
                 self.metrics = None
+            else:
+                try:
+                    self.metrics.start_server()
+                except Exception as e:
+                    self.logger.error(
+                        "=" * 60 + "\n"
+                        f"METRICS SERVER FAILED TO START: {e}\n"
+                        f"Check if port {config.metrics.port} is available.\n"
+                        "Metrics collection will be disabled for this session.\n"
+                        + "=" * 60
+                    )
+                    self.metrics = None
 
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -158,7 +175,16 @@ class Application:
             if self.running:
                 time.sleep(self.config.monitor.check_interval)
 
+        self._shutdown()
         self.logger.info(f"Shutting down after {self.check_count} health checks")
+
+    def _shutdown(self) -> None:
+        """Clean up resources during shutdown."""
+        if self.metrics:
+            try:
+                self.metrics.shutdown()
+            except Exception as e:
+                self.logger.warning(f"Error shutting down metrics server: {e}")
 
 
 def parse_args() -> argparse.Namespace:

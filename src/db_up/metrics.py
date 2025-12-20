@@ -3,9 +3,28 @@ Prometheus metrics collection for db-up.
 
 This module provides Prometheus metrics for monitoring database connection
 status and performance.
+
+Server Lifecycle:
+    The MetricsCollector starts a background HTTP server thread when
+    start_server() is called. To ensure proper cleanup, call shutdown()
+    before application exit.
+
+    Example:
+        collector = MetricsCollector(database="mydb", host="localhost", port=9090)
+        collector.start_server()
+        try:
+            # ... run application ...
+        finally:
+            collector.shutdown()
+
+    Note: The prometheus_client library uses a shared registry. If you create
+    multiple MetricsCollector instances with the same metric names, you may
+    encounter "Duplicated timeseries" errors. Use a single collector per
+    application.
 """
 
 import logging
+from typing import Any, Optional, Tuple
 
 from db_up.models import HealthCheckResult
 
@@ -25,8 +44,18 @@ class MetricsCollector:
     All metrics include labels: database, host
     """
 
+    # Default histogram buckets (includes 5.0s to match connection timeout)
+    DEFAULT_BUCKETS: Tuple[float, ...] = (
+        0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0
+    )
+
     def __init__(
-        self, database: str, host: str, port: int, metrics_host: str = "0.0.0.0"
+        self,
+        database: str,
+        host: str,
+        port: int,
+        metrics_host: str = "0.0.0.0",
+        histogram_buckets: Tuple[float, ...] = DEFAULT_BUCKETS,
     ) -> None:
         """
         Initialize the metrics collector.
@@ -36,13 +65,15 @@ class MetricsCollector:
             host: Database host for labels
             port: Port for metrics HTTP server
             metrics_host: Host to bind metrics server (default: 0.0.0.0)
+            histogram_buckets: Histogram buckets for response time metrics
         """
         self.database = database
         self.host = host
         self.port = port
         self.metrics_host = metrics_host
+        self.histogram_buckets = histogram_buckets
         self._server_started = False
-        self._server = None  # HTTP server instance for cleanup
+        self._server: Optional[Any] = None  # HTTP server instance for cleanup
 
         try:
             from prometheus_client import Counter, Gauge, Histogram, start_http_server
@@ -57,14 +88,11 @@ class MetricsCollector:
                 ["database", "host"],
             )
 
-            # Buckets include 5.0s to match default connection timeout
             self._check_duration = Histogram(
                 "db_up_check_duration_seconds",
                 "Duration of health checks in seconds",
                 ["database", "host"],
-                buckets=(
-                    0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0
-                ),
+                buckets=histogram_buckets,
             )
 
             self._checks_total = Counter(

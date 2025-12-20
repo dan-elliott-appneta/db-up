@@ -7,7 +7,7 @@ including configuration models and result objects.
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Tuple
 
 
 @dataclass
@@ -233,16 +233,24 @@ class MetricsConfig:
         enabled: Whether metrics collection is enabled (default: False)
         port: Port for metrics HTTP server (default: 9090)
         host: Host to bind metrics server (default: 0.0.0.0)
+        histogram_buckets: Histogram buckets for response time metrics in seconds
     """
 
     enabled: bool = False
     port: int = 9090
     host: str = "0.0.0.0"
+    histogram_buckets: Tuple[float, ...] = (
+        0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0
+    )
 
     def __post_init__(self) -> None:
         """Validate metrics configuration."""
         if not (1 <= self.port <= 65535):
             raise ValueError(f"Invalid port {self.port}. Must be between 1 and 65535.")
+        if not self.histogram_buckets:
+            raise ValueError("histogram_buckets cannot be empty")
+        if not all(b > 0 for b in self.histogram_buckets):
+            raise ValueError("histogram_buckets values must be positive")
 
 
 @dataclass
