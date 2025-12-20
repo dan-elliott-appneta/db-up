@@ -8,11 +8,11 @@ Always run type checking, linting, and tests locally before pushing changes:
 # Activate virtual environment
 source .venv/bin/activate
 
-# Run linting (flake8)
-flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
+# Run linting (uses .flake8 config)
+flake8 src tests
 
-# Run type checking (mypy)
-mypy src --ignore-missing-imports
+# Run type checking (uses pyproject.toml config)
+mypy src
 
 # Run tests
 pytest -v
@@ -25,7 +25,7 @@ All checks must pass before pushing. The CI will run the same checks and block m
 Run all checks at once:
 
 ```bash
-flake8 src tests --select=E9,F63,F7,F82 && mypy src --ignore-missing-imports && pytest -v
+flake8 src tests && mypy src && pytest -v
 ```
 
 ## Project Structure
@@ -33,6 +33,8 @@ flake8 src tests --select=E9,F63,F7,F82 && mypy src --ignore-missing-imports && 
 - `src/db_up/` - Main source code
 - `tests/` - Test suite (173 tests, 97% coverage)
 - `.github/workflows/` - CI/CD workflows
+- `.flake8` - Flake8 configuration
+- `pyproject.toml` - Project config including mypy settings
 
 ## Installation for Development
 
@@ -40,3 +42,7 @@ flake8 src tests --select=E9,F63,F7,F82 && mypy src --ignore-missing-imports && 
 ./install.sh --venv .venv --dev
 source .venv/bin/activate
 ```
+
+## Python Version
+
+This project requires Python 3.9 or higher.

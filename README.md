@@ -2,7 +2,7 @@
 
 A simple, secure tool to monitor PostgreSQL database connectivity with configurable intervals, comprehensive logging, and robust error handling.
 
-[![CI](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml/badge.svg)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Tests](https://img.shields.io/badge/tests-171%20passed-success)]() [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.8%2B-blue)]()
+[![CI](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml/badge.svg)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Tests](https://img.shields.io/badge/tests-171%20passed-success)]() [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.9%2B-blue)]()
 
 ## Features
 

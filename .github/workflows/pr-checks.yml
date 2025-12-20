@@ -32,10 +32,7 @@ jobs:
 
       - name: Run flake8
         run: |
-          # Stop the build if there are Python syntax errors or undefined names
-          flake8 src tests --count --select=E9,F63,F7,F82 --show-source --statistics
-          # Check for other issues (warnings only for now)
-          flake8 src tests --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          flake8 src tests
 
   typecheck:
     name: Type Check (mypy)
@@ -56,7 +53,7 @@ jobs:
 
       - name: Run mypy
         run: |
-          mypy src --ignore-missing-imports
+          mypy src
 
   test:
     name: Test (Python ${{ matrix.python-version }})

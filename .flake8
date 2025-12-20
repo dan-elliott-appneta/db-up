@@ -1,0 +1,15 @@
+[flake8]
+max-line-length = 127
+max-complexity = 10
+# Check for critical errors only: syntax errors, undefined names
+# TODO: Enable full linting after codebase cleanup
+select = E9,F63,F7,F82
+exclude =
+    .git,
+    __pycache__,
+    build,
+    dist,
+    *.egg-info,
+    .venv,
+    venv,
+    .eggs
