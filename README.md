@@ -2,12 +2,12 @@
 
 A simple, secure tool to monitor PostgreSQL database connectivity with configurable intervals, comprehensive logging, and robust error handling.
 
-[![CI](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml/badge.svg)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Tests](https://img.shields.io/badge/tests-171%20passed-success)]() [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.9%2B-blue)]()
+[![CI](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml/badge.svg)](https://github.com/dan-elliott-appneta/db-up/actions/workflows/python-package.yml) [![Tests](https://img.shields.io/badge/tests-173%20passed-success)]() [![Coverage](https://img.shields.io/badge/coverage-97%25-brightgreen)]() [![Python](https://img.shields.io/badge/python-3.9%2B-blue)]()
 
 ## Features
 
 - 🔒 **Security First**: Passwords only from environment variables, automatic credential redaction, SSL/TLS by default
-- 🧪 **Fully Tested**: 171 tests with 97% code coverage
+- 🧪 **Fully Tested**: 173 tests with 97% code coverage
 - 👤 **Easy to Use**: Zero-config quick start, works with just `DB_PASSWORD` and `DB_NAME`
 - 📊 **Configurable Logging**: DEBUG/INFO/WARNING/ERROR levels, text or JSON format, console or file output
 - 🔄 **Smart Retries**: Exponential backoff with jitter to prevent thundering herd

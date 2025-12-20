@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
       - name: Install dependencies
         run: |
@@ -79,7 +78,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          pytest --cov=src --cov-report=term-missing --cov-report=xml -v
+          pytest --cov=src --cov-report=term-missing --cov-report=xml --cov-fail-under=95 -v
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4

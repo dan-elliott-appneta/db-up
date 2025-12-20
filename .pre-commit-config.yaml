@@ -24,6 +24,7 @@ repos:
       - id: mypy
         additional_dependencies:
           - types-PyYAML
+          - types-colorama
         args: ['--config-file=pyproject.toml']
         pass_filenames: false
         entry: mypy src
