@@ -20,6 +20,7 @@ from db_up.models import (
     DatabaseConfig,
     MonitorConfig,
     LoggingConfig,
+    MetricsConfig,
 )
 
 
@@ -53,11 +54,13 @@ def load_config(config_file: Optional[str] = None) -> Config:
     database_config = _load_database_config(file_config.get("database", {}))
     monitor_config = _load_monitor_config(file_config.get("monitor", {}))
     logging_config = _load_logging_config(file_config.get("logging", {}))
+    metrics_config = _load_metrics_config(file_config.get("metrics", {}))
 
     return Config(
         database=database_config,
         monitor=monitor_config,
         logging=logging_config,
+        metrics=metrics_config,
     )
 
 
@@ -262,6 +265,29 @@ def _load_logging_config(file_config: Dict[str, Any]) -> LoggingConfig:
         format=format_type,
         redact_credentials=redact_credentials,
         redact_hostnames=redact_hostnames,
+    )
+
+
+def _load_metrics_config(file_config: Dict[str, Any]) -> MetricsConfig:
+    """
+    Load metrics configuration with environment variable priority.
+
+    Args:
+        file_config: Metrics section from config file
+
+    Returns:
+        MetricsConfig object
+    """
+    enabled = _parse_bool(
+        os.getenv("DB_METRICS_ENABLED"), file_config.get("enabled", False)
+    )
+    port = int(os.getenv("DB_METRICS_PORT", file_config.get("port", 9090)))
+    host = os.getenv("DB_METRICS_HOST") or file_config.get("host", "0.0.0.0")
+
+    return MetricsConfig(
+        enabled=enabled,
+        port=port,
+        host=host,
     )
 
 

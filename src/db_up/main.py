@@ -8,12 +8,13 @@ import sys
 import signal
 import time
 import argparse
-from typing import Any
+from typing import Any, Optional
 
 from db_up.config import load_config
 from db_up.logger import setup_logging
 from db_up.db_checker import DatabaseChecker
 from db_up.models import Config
+from db_up.metrics import MetricsCollector
 
 
 class Application:
@@ -41,6 +42,21 @@ class Application:
             config.database, redact_hostnames=config.logging.redact_hostnames
         )
         self.check_count = 0
+
+        # Initialize metrics collector if enabled
+        self.metrics: Optional[MetricsCollector] = None
+        if config.metrics.enabled:
+            self.metrics = MetricsCollector(
+                database=config.database.database,
+                host=config.database.host,
+                port=config.metrics.port,
+                metrics_host=config.metrics.host,
+            )
+            try:
+                self.metrics.start_server()
+            except Exception as e:
+                self.logger.error(f"Failed to start metrics server: {e}")
+                self.metrics = None
 
         # Setup signal handlers for graceful shutdown
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -71,6 +87,10 @@ class Application:
 
         result = self.checker.check_connection()
 
+        # Record metrics if enabled
+        if self.metrics:
+            self.metrics.record_check(result)
+
         if result.is_success():
             ms = result.response_time_ms
             self.logger.info(f"✓ Health check passed - Response time: {ms:.0f}ms")
@@ -99,6 +119,10 @@ class Application:
 
             try:
                 result = self.checker.check_connection()
+
+                # Record metrics if enabled
+                if self.metrics:
+                    self.metrics.record_check(result)
 
                 if result.is_success():
                     response_ms = result.response_time_ms
